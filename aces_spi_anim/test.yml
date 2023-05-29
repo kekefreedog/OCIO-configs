@@ -1,0 +1,161 @@
+
+########################
+
+displays:
+  sRGB Monitor:
+    - !<View> {name: Filmic - Medium Contrast, colorspace: Output - sRGB, look: +LMT_neutral_tonemap}
+...
+looks:
+  - !<Look>
+    name: LMT_neutral_tonemap
+    process_space: ACEScct
+    transform: !<FileTransform> {src: LMT_neutralTonemap.cc} 
+
+########################
+
+displays:
+  FIXSTUDIO - film:
+    - !<View> {name: Film, colorspace: vd16, looks: ACES - ACEScg to SPI ANIM - sRGB}
+looks:
+...
+  - !<Look>
+    name: ACES - ACEScg to SPI ANIM - sRGB
+    process_space: ACES - ACEScg
+    transform: !<GroupTransform>
+      children:
+        - !<ColorSpaceTransform> {src: ACES - ACEScg, dst: Utility - Linear - sRGB}
+
+########################
+########################
+
+  - !<ColorSpace>
+    name: Output - sRGB - LMT medium contrast
+    family: Output
+    equalitygroup: ""
+    bitdepth: 32f
+    description: ACES 1.0 Output - sRGB Transform with LMT
+    isdata: false
+    allocation: uniform
+    allocationvars: [0, 1]
+    to_reference: !<GroupTransform>
+      children:
+        - !<FileTransform> {src: InvRRT.sRGB.Log2_48_nits_Shaper.spi3d, interpolation: tetrahedral}
+        - !<FileTransform> {src: Log2_48_nits_Shaper_to_linear.spi1d, interpolation: linear}
+        - !<ColorSpaceTransform> {src: ACES - ACES2065-1, dst: ACES - ACES2065-1, looks: LMT_neutral_tonemap, direction: inverse}
+    from_reference: !<GroupTransform>
+      children:
+        - !<ColorSpaceTransform> {src: ACES - ACES2065-1, dst: ACES - ACES2065-1, looks: LMT_neutral_tonemap}
+        - !<FileTransform> {src: Log2_48_nits_Shaper_to_linear.spi1d, interpolation: linear, direction: inverse}
+        - !<FileTransform> {src: Log2_48_nits_Shaper.RRT.sRGB.spi3d, interpolation: tetrahedral}
+
+########################
+
+# v1 - non
+
+  - !<ColorSpace>
+    name: Output - vd16 Film
+    family: Output
+    equalitygroup: ""
+    bitdepth: 16ui
+    description: Colorspace to convert ACEScg to vd16
+    isdata: false
+    allocation: uniform
+    to_reference: !<GroupTransform>
+      children:
+        - !<ColorSpaceTransform> {src: ACES - ACEScg, dst: Utility - Linear - sRGB}
+        - !<FileTransform> {src: vd16.spi1d, interpolation: nearest}
+    from_reference: !<GroupTransform>
+      children:
+        - !<FileTransform> {src: vd16.spi1d, interpolation: nearest}
+        - !<ColorSpaceTransform> {src: Utility - Linear - sRGB, dst: ACES - ACEScg}
+
+# v2 - presque
+
+  - !<ColorSpace>
+    name: Output - vd16 Film
+    family: Output
+    equalitygroup: ""
+    bitdepth: 16ui
+    description: Colorspace to convert ACEScg to sRGB with vd16 looks
+    isdata: false
+    allocation: uniform
+    to_reference: !<GroupTransform>
+      children:
+        - !<FileTransform> {src: InvRRT.sRGB.Log2_48_nits_Shaper.spi3d, interpolation: tetrahedral}
+        - !<FileTransform> {src: Log2_48_nits_Shaper_to_linear.spi1d, interpolation: linear}
+        - !<LookTransform> {src: ACES - ACEScg, dst: ACES - ACEScg, looks: ACES - ACEScg to SPI ANIM - sRGB, direction: inverse}
+    from_reference: !<GroupTransform>
+      children:
+        - !<LookTransform> {src: ACES - ACEScg, dst: ACES - ACEScg, looks: ACES - ACEScg to SPI ANIM - sRGB}
+        - !<FileTransform> {src: Log2_48_nits_Shaper_to_linear.spi1d, interpolation: linear, direction: inverse}
+        - !<FileTransform> {src: Log2_48_nits_Shaper.RRT.sRGB.spi3d, interpolation: tetrahedral}
+
+# v3
+
+  - !<ColorSpace>
+    name: Output - vd16 Film
+    family: Output
+    equalitygroup: ""
+    bitdepth: 16ui
+    description: Colorspace to convert ACEScg to sRGB with vd16 looks
+    isdata: false
+    allocation: uniform
+    to_reference: !<GroupTransform>
+      children:
+        - !<LookTransform> {src: ACES - ACEScg, dst: Output - sRGB, looks: ACES - ACEScg to SPI ANIM - sRGB, direction: inverse}
+    from_reference: !<GroupTransform>
+      children:
+        - !<LookTransform> {src: Output - sRGB, dst: ACES - ACEScg, looks: ACES - ACEScg to SPI ANIM - sRGB, direction: inverse}
+
+
+  - !<ColorSpace>
+    name: Output - sRGB (SPI ANIM)
+    family: Output
+    equalitygroup: ""
+    bitdepth: 32f
+    description: Colorspace to convert ACEScg to sRGB with vd16 looks
+    isdata: false
+    allocation: uniform
+    allocationvars: [0, 1]
+    to_reference: !<GroupTransform>
+      children:
+        - !<LookTransform> {src: Output - sRGB, dst: ACES - ACEScg, looks: ACES - ACEScg to SPI ANIM - sRGB, direction: inverse}
+    from_reference: !<GroupTransform>
+      children:
+        - !<LookTransform> {src: ACES - ACEScg, dst: Output - sRGB, looks: ACES - ACEScg to SPI ANIM - sRGB}
+
+  - !<ColorSpace>
+    name: Output - sRGB (SPI ANIM)
+    family: Output
+    equalitygroup: ""
+    bitdepth: 32f
+    description: Colorspace to convert ACEScg to sRGB with vd16 looks
+    isdata: false
+    allocation: uniform
+    allocationvars: [0, 1]
+    to_reference: !<GroupTransform>
+      children:
+        - !<LookTransform> {src: ACES - ACEScg, dst: vd16, look: ACES - ACEScg to SPI ANIM - sRGB}
+    from_reference: !<GroupTransform>
+      children:
+        - !<LookTransform> {src: vd16, dst: ACES - ACEScg, look: ACES - ACEScg to SPI ANIM - sRGB, direction: inverse}
+
+# v4
+
+  - !<ColorSpace>
+    name: Output - sRGB (SPI ANIM)
+    family: Output
+    equalitygroup: ""
+    bitdepth: 32f
+    description: Colorspace to convert ACEScg to sRGB with vd16 looks
+    isdata: false
+    allocation: uniform
+    allocationvars: [0, 1]
+    to_reference: !<GroupTransform>
+      children:
+        - !<FileTransform> {src: ACES - ACEScg, dist: Utility - Linear - sRGB}
+        - !<LookTransform> {src: Utility - Linear - sRGB, dist: vd16, look: ACES - ACEScg to SPI ANIM - sRGB, direction: forward}
+    from_reference: !<GroupTransform>
+      children:
+        - !<LookTransform> {src: vd16, dist: Utility - Linear - sRGB, look: ACES - ACEScg to SPI ANIM - sRGB, direction: inverse}
+        - !<FileTransform> {src: Utility - Linear - sRGB, dist: ACES - ACEScg}
